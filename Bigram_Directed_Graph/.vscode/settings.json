@@ -56,5 +56,6 @@
         "iomanip": "cpp",
         "*.rh": "cpp",
         "filesystem": "cpp"
-    }
+    },
+    "editor.fontSize": 14
 }

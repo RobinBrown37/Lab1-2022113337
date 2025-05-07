@@ -1,3 +1,10 @@
+// First modification: Added this line
+
+
+
+
+
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -321,49 +328,87 @@ public:
     }
 
     string randomWalk(const string& baseName) {
-        if (adjList.empty()) return "";
-        
-        random_device rd;
-        mt19937 gen(rd());
-        vector<string> nodes;
-        for (const auto& [node, _] : adjList) nodes.push_back(node);
-        uniform_int_distribution<> dis(0, nodes.size() - 1);
-        string current = nodes[dis(gen)];
-        
-        set<pair<string, string>> visitedEdges;
-        vector<string> walk = {current};
-        
-        while (true) {
-            if (adjList[current].empty()) {
-                cout << "Reached node with no outgoing edges." << endl;
-                break;
-            }
-            
-            vector<string> candidates;
-            for (const auto& [next, _] : adjList[current]) 
-                candidates.push_back(next);
-            
-            uniform_int_distribution<> nextDis(0, candidates.size() - 1);
-            string next = candidates[nextDis(gen)];
-            
-            if (visitedEdges.count({current, next})) break;
-            visitedEdges.insert({current, next});
-            
-            walk.push_back(next);
-            current = next;
-        }
-        
-        string outputFile = "img\\" + baseName + "_random_walk.txt";
-        ofstream out(outputFile);
-        string result;
-        for (size_t i = 0; i < walk.size(); ++i) {
-            result += walk[i];
-            if (i != walk.size() - 1) result += " ";
-        }
-        out << result;
-        out.close();
-        return result;
+    if (adjList.empty()) return "";
+    
+    // Read the last used starting node from a file
+    string lastNodeFile = "img\\" + baseName + "_last_node.txt";
+    string lastUsedNode = "";
+    
+    ifstream inFile(lastNodeFile);
+    if (inFile.is_open()) {
+        getline(inFile, lastUsedNode);
+        inFile.close();
     }
+    
+    // Seed the random generator with current time
+    // auto seed = chrono::high_resolution_clock::now().time_since_epoch().count();
+    std::random_device rd;
+    auto time_seed = chrono::high_resolution_clock::now().time_since_epoch().count();
+    mt19937 gen(rd() ^ static_cast<unsigned int>(time_seed));
+    
+    // Collect all nodes except the last used one
+    vector<string> nodes;
+    for (const auto& [node, _] : adjList) {
+        if (node != lastUsedNode) {
+            nodes.push_back(node);
+        }
+    }
+    
+    // If we have no available nodes (only had one node), reset
+    if (nodes.empty()) {
+        for (const auto& [node, _] : adjList) {
+            nodes.push_back(node);
+        }
+        cout << "Only one node in graph, will reuse it" << endl;
+    }
+    
+    // Select a random node from available nodes
+    uniform_int_distribution<> dis(0, nodes.size() - 1);
+    string current = nodes[dis(gen)];
+    
+    // Save this node as the last used node
+    ofstream outFile(lastNodeFile);
+    if (outFile.is_open()) {
+        outFile << current;
+        outFile.close();
+    }
+    
+    set<pair<string, string>> visitedEdges;
+    vector<string> walk = {current};
+    
+    cout << "Starting random walk from node: " << current << endl;
+
+    while (true) {
+        if (adjList[current].empty()) {
+            cout << "Reached node with no outgoing edges." << endl;
+            break;
+        }
+        
+        vector<string> candidates;
+        for (const auto& [next, _] : adjList[current]) 
+            candidates.push_back(next);
+        
+        uniform_int_distribution<> nextDis(0, candidates.size() - 1);
+        string next = candidates[nextDis(gen)];
+        
+        if (visitedEdges.count({current, next})) break;
+        visitedEdges.insert({current, next});
+        
+        walk.push_back(next);
+        current = next;
+    }
+    
+    string outputFile = "img\\" + baseName + "_random_walk.txt";
+    ofstream out(outputFile);
+    string result;
+    for (size_t i = 0; i < walk.size(); ++i) {
+        result += walk[i];
+        if (i != walk.size() - 1) result += " ";
+    }
+    out << result;
+    out.close();
+    return result;
+}
 
     const unordered_map<string, double>& getPageRank() const { return pageRank; }
     
@@ -531,13 +576,18 @@ int main(int argc, char* argv[]) {
                 vector<pair<string, double>> sortedPR(pr.begin(), pr.end());
                 sort(sortedPR.begin(), sortedPR.end(),
                     [](const auto& a, const auto& b) { return b.second < a.second; });
-                
                 for (const auto& [node, rank] : sortedPR) {
                     cout << node << ": " << rank << endl;
                 }
                 break;
             }
             case 6: {
+                // Ensure the img directory exists before calling randomWalk
+                if (!CreateDirectoryA("img", NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+                    cout << "Error: Could not create 'img' directory." << endl;
+                    break;
+                }
+                
                 string walk = g.randomWalk(baseName);
                 cout << "Random walk: " << walk << endl;
                 cout << "Saved to img\\" << baseName << "_random_walk.txt" << endl;
