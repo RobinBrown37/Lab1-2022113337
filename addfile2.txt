@@ -1,6 +1,1 @@
-<<<<<<< HEAD
-=======
-This is a test file.
-Sequence 2
->>>>>>> C4
 B1
