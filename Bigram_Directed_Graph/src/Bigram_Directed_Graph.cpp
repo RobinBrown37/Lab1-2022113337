@@ -1,13 +1,3 @@
-// First Modified here: add this line at the beginning of the file
-// Second Modified here: add this line at the second line of the file
-
-
-
-
-
-
-
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -51,7 +41,6 @@ public:
     }
 
     bool generateDotFile(const string& baseName) {
-        // Use backslashes for Windows compatibility
         string dotFileName = "img\\" + baseName + ".dot";
         string pngFileName = "img\\" + baseName + ".dot.png";
         
@@ -154,7 +143,8 @@ public:
         return result;
     }
 
-    vector<string> shortestPath(const string& src, const string& dest) {
+    auto shortestPath(const string& src, const string& dest) -> vector<string>
+    {
         string s = toLower(src), d = toLower(dest);
         priority_queue<pair<int, string>, vector<pair<int, string>>, greater<>> pq;
         unordered_map<string, int> dist;
@@ -330,7 +320,8 @@ public:
         }
     }
 
-    string randomWalk(const string& baseName) {
+    auto randomWalk(const string& baseName) -> string
+    {
     if (adjList.empty()) return "";
     
     // Read the last used starting node from a file
