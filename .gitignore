@@ -1,6 +1,6 @@
 .vscode
 *.zip
 *.png
-./Bigram_Directed_Graph/src/white_box_test/
+Bigram_Directed_Graph/src/white_box_test/
 addfile1.txt
 addfile2.txt    
